@@ -7,7 +7,6 @@ import (
 )
 
 func main() {
-
 	limitFromURL := 10
 	cursorFromURL := ""
 

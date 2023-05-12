@@ -1,14 +1,12 @@
 package pagination
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestEncodeCursor(t *testing.T) {
-
 	expected1 := "bmV4dDoxMjM0NTY3ODk="
 	actual1 := EncodeCursor("123456789", "next")
 	assert.Equal(t, expected1, actual1, "Encode Cursor1: invalid encode value")
@@ -23,7 +21,6 @@ func TestEncodeCursor(t *testing.T) {
 }
 
 func TestDecodeCursor(t *testing.T) {
-
 	expectedDir1 := DirectionNext
 	expectedCur1 := "123456789"
 
@@ -39,8 +36,6 @@ func TestDecodeCursor(t *testing.T) {
 
 	actualDir2, actualCur2, actualErr2 := DecodeCursor("YWZ0ZXI6cG9wb3BvcA==")
 
-	fmt.Println(actualErr2, "ppppp")
-
 	assert.Equal(t, expectedDir2, actualDir2, "case 2: direction are not equal. it should be ")
 	assert.Equal(t, expectedCur2, actualCur2, "case 2: cursor are not equal. it should be ")
 	assert.Error(t, actualErr2, "case 2: an error occured. there should be none")
@@ -53,12 +48,11 @@ func TestDecodeCursor(t *testing.T) {
 }
 
 func Test_getStructFieldValue(t *testing.T) {
-
-	var example1 = struct {
+	example1 := struct {
 		ID int
 	}{1}
 
-	var example2 = struct {
+	example2 := struct {
 		Title string
 	}{"title of the page is otyoung"}
 
@@ -82,7 +76,7 @@ func TestNewCursor(t *testing.T) {
 		Title string
 	}
 
-	var books = []Books{
+	books := []Books{
 		{ID: "ISBN1", Title: "48 Laws of power -1"},
 		{ID: "ISBN2", Title: "48 Laws of power -2"},
 		{ID: "ISBN3", Title: "48 Laws of power -3"},
