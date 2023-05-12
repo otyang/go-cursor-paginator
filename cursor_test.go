@@ -1,124 +1,126 @@
 package pagination
 
 import (
-	"reflect"
+	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-type Entry struct {
-	ID   string
-	Text string
+func TestEncodeCursor(t *testing.T) {
+
+	expected1 := "bmV4dDoxMjM0NTY3ODk="
+	actual1 := EncodeCursor("123456789", "next")
+	assert.Equal(t, expected1, actual1, "Encode Cursor1: invalid encode value")
+
+	expected2 := "cHJldjoxMjM0NTY3ODk="
+	actual2 := EncodeCursor("123456789", "prev")
+	assert.Equal(t, expected2, actual2, "Encode Cursor2: invalid encode value")
+
+	expected3 := ""
+	actual3 := EncodeCursor("", "next")
+	assert.Equal(t, expected3, actual3, "Encode Cursor3: invalid encode value")
 }
 
-var __records = []Entry{
-	{ID: "1", Text: "Title 1"},
-	{ID: "2", Text: "Title 2"},
-	{ID: "3", Text: "Title 3"},
-	{ID: "4", Text: "Title 4"},
-	{ID: "5", Text: "Title 5"},
-	{ID: "6", Text: "Title 6"},
-	{ID: "7", Text: "Title 7"},
-	{ID: "8", Text: "Title 8"},
-	{ID: "9", Text: "Title 9"},
-	{ID: "10", Text: "Title 10"},
+func TestDecodeCursor(t *testing.T) {
+
+	expectedDir1 := DirectionNext
+	expectedCur1 := "123456789"
+
+	actualDir1, actualCur1, actualErr1 := DecodeCursor("bmV4dDoxMjM0NTY3ODk=")
+
+	assert.Equal(t, expectedDir1, actualDir1, "case 1: direction are not equal. it should be")
+	assert.Equal(t, expectedCur1, actualCur1, "case 1: cursor are not equal. it should be")
+	assert.NoError(t, actualErr1, "case 1: an error occured. there should be none")
+
+	//
+	expectedDir2 := Direction("")
+	expectedCur2 := ""
+
+	actualDir2, actualCur2, actualErr2 := DecodeCursor("YWZ0ZXI6cG9wb3BvcA==")
+
+	fmt.Println(actualErr2, "ppppp")
+
+	assert.Equal(t, expectedDir2, actualDir2, "case 2: direction are not equal. it should be ")
+	assert.Equal(t, expectedCur2, actualCur2, "case 2: cursor are not equal. it should be ")
+	assert.Error(t, actualErr2, "case 2: an error occured. there should be none")
+
+	_, _, err3 := DecodeCursor("YWZ0ZXI6cG9wb3BvcA==")
+	assert.ErrorIs(t, err3, ErrDirectionInvalid, "case 3: an error did not occured. there should have been")
+
+	_, _, err4 := DecodeCursor("YWZ0ZXIrK3BvcG9wb3A=")
+	assert.ErrorIs(t, err4, ErrCursorInvalid, "case 4: an error did not occured. there should have been")
 }
 
-var __records2 = []Entry{
-	{ID: "1", Text: "Title 1"},
-	{ID: "2", Text: "Title 2"},
-	{ID: "3", Text: "Title 3"},
-	{ID: "4", Text: "Title 4"},
-}
+func Test_getStructFieldValue(t *testing.T) {
 
-var __dir = SettingsDefaultDirection
+	var example1 = struct {
+		ID int
+	}{1}
+
+	var example2 = struct {
+		Title string
+	}{"title of the page is otyoung"}
+
+	expectedValue1 := 1
+	expectedValue2 := "title of the page is otyoung"
+
+	actual1 := getStructFieldValue(example1, "ID")
+	actual2 := getStructFieldValue(example2, "Title")
+	actual3 := func() {
+		getStructFieldValue(example1, "FieldDoesNotExist")
+	}
+
+	assert.Equal(t, expectedValue1, actual1, "it should be same")
+	assert.Equal(t, expectedValue2, actual2, "it should be same")
+	assert.Panics(t, actual3, "it should panic")
+}
 
 func TestNewCursor(t *testing.T) {
-	__USERLIMIT := 10
-	__case1_filter := NewFilters("", __USERLIMIT, __dir)
-	__case1_nextPage_cursor := ""
-	__case1_prevPage_cursor := ""
-	_want_case1 := []Entry{
-		{ID: "1", Text: "Title 1"},
-		{ID: "2", Text: "Title 2"},
-		{ID: "3", Text: "Title 3"},
-		{ID: "4", Text: "Title 4"},
-		{ID: "5", Text: "Title 5"},
-		{ID: "6", Text: "Title 6"},
-		{ID: "7", Text: "Title 7"},
-		{ID: "8", Text: "Title 8"},
-		{ID: "9", Text: "Title 9"},
-		{ID: "10", Text: "Title 10"},
+	type Books struct {
+		ID    string
+		Title string
 	}
 
-	// ccase 2
-	__USERLIMIT2 := 3
-	__case2_filter := NewFilters("2", __USERLIMIT2, __dir)
-	_want_case2 := []Entry{
-		{ID: "1", Text: "Title 1"},
-		{ID: "2", Text: "Title 2"},
-		{ID: "3", Text: "Title 3"},
-	}
-	__case2_prevPage_cursor := "1"
-	__case2_nextPage_cursor := "4"
-
-	type args struct {
-		entries           []Entry
-		isFirstPage       bool
-		userLimit         int
-		cursorStructField string
+	var books = []Books{
+		{ID: "ISBN1", Title: "48 Laws of power -1"},
+		{ID: "ISBN2", Title: "48 Laws of power -2"},
+		{ID: "ISBN3", Title: "48 Laws of power -3"},
+		{ID: "ISBN4", Title: "48 Laws of power -4"},
 	}
 
-	tests := []struct {
-		name  string
-		args  args
-		want  Cursor
-		want1 []Entry
-	}{
-		{
-			name: "case 1 length of records <= userlimit, on firstpage, so there should be no next & prev page",
-			args: args{
-				entries:           __records,
-				isFirstPage:       __case1_filter.IsFirstPage,
-				userLimit:         __USERLIMIT,
-				cursorStructField: "ID",
-			},
-			want: Cursor{
-				Total:       len(_want_case1),
-				HasPrevPage: false,
-				HasNextPage: false,
-				Start:       __case1_prevPage_cursor,
-				End:         __case1_nextPage_cursor,
-			},
-			want1: _want_case1,
+	expectedRecord1 := books
+	expectedCursor1 := Cursor{
+		Total:       len(books),
+		HasPrevPage: false,
+		HasNextPage: false,
+		Start:       books[0].ID,
+		End:         books[4-1].ID,
+	}
+
+	cursor1, records1 := NewCursor(books, true, 4, "ID")
+	assert.Equal(t, expectedCursor1, cursor1, "cursor are not same. it should 1")
+	assert.Equal(t, expectedRecord1, records1, "records are not same. it should 1")
+
+	// case 2
+	limit := 2
+	expectedRecord2 := books[:limit-1]
+	expectedCursor2 := Cursor{
+		Total:       limit,
+		HasPrevPage: true,
+		HasNextPage: true,
+		Start:       books[0].ID,
+		End:         books[limit-1].ID,
+	}
+
+	cursor2, records2 := NewCursor(books, false, 2, "ID")
+
+	assert.Equal(t, expectedCursor2, cursor2, "cursor are not same. it should 2")
+	assert.Equal(t, expectedRecord2, records2, "records are not same. it should 2")
+
+	assert.Panics(t,
+		func() {
+			NewCursor(books, true, 4, "FieldDoesNotExist")
 		},
-
-		{
-			name: "case 2 length of records <= userlimit, not on firstpage, so there should be no next, only prev page",
-			args: args{
-				entries:           __records2,
-				isFirstPage:       __case2_filter.IsFirstPage,
-				userLimit:         __USERLIMIT2,
-				cursorStructField: "ID",
-			},
-			want: Cursor{
-				Total:       len(_want_case2),
-				HasPrevPage: true,
-				HasNextPage: true,
-				Start:       __case2_prevPage_cursor,
-				End:         __case2_nextPage_cursor,
-			},
-			want1: _want_case2,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := NewCursor(tt.args.entries, tt.args.isFirstPage, tt.args.userLimit, tt.args.cursorStructField)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewCursor() got = %v, want %v", got, tt.want)
-			}
-			if !reflect.DeepEqual(got1, tt.want1) {
-				t.Errorf("NewCursor() got1 = %v, want %v", got1, tt.want1)
-			}
-		})
-	}
+		"new cursor did not panic. it should")
 }
