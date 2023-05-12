@@ -16,7 +16,20 @@ To run tests, run the following command
   make
 ```
 
+## OR Do this to run Test
+```bash
+    go test -v  ./...
+```
 
+# runs coverage tests and generates the coverage report
+```bash
+    go test ./... -v -coverpkg=./...
+```
+
+# runs integration tests
+```bash
+	go test ./... -tags=integration ./...
+```
 
 ## License
 
