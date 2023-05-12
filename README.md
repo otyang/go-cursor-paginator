@@ -9,24 +9,24 @@ see the [examples folder](/examples)
 
 
 ## Running Tests
-
-To run tests, run the following command
+To run all tests, run the following command
 
 ```bash
   make
 ```
 
-## OR Do this to run Test
+## Running Tests (when makefile not available)
+### OR Do this to run Test
 ```bash
     go test -v  ./...
 ```
 
-# runs coverage tests and generates the coverage report
+### runs coverage tests and generates the coverage report
 ```bash
     go test ./... -v -coverpkg=./...
 ```
 
-# runs integration tests
+### runs integration tests
 ```bash
 	go test ./... -tags=integration ./...
 ```
